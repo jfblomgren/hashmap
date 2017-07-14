@@ -7,6 +7,7 @@
 static Pair *pair_new(const void *key, void *value);
 static Pair **get_bucket(Hashmap *hashmap, const void *key);
 static Pair **get_pair(Hashmap *hashmap, Pair **prev_pair, const void *key);
+static void init_buckets(Hashmap *hashmap);
 
 
 Hashmap *hashmap_new(size_t num_buckets,
@@ -16,10 +17,7 @@ Hashmap *hashmap_new(size_t num_buckets,
         goto error_hashmap_alloc;
     }
 
-    /* Initializing the buckets to NULL makes it easy to check if a bucket
-     * is already in use.
-     */
-    hashmap->buckets = calloc(num_buckets, sizeof(Pair *));
+    hashmap->buckets = malloc(num_buckets * sizeof(Pair *));
     if (hashmap->buckets == NULL) {
         goto error_buckets_alloc;
     }
@@ -27,6 +25,8 @@ Hashmap *hashmap_new(size_t num_buckets,
     hashmap->num_buckets = num_buckets;
     hashmap->hash = hash;
     hashmap->compare = compare;
+
+    init_buckets(hashmap);
 
     return hashmap;
 
@@ -116,4 +116,13 @@ static Pair **get_pair(Hashmap *hashmap, Pair **prev_pair, const void *key) {
     }
 
     return pair;
+}
+
+static void init_buckets(Hashmap *hashmap) {
+    /* Initializing the buckets to NULL makes it easy to check if a bucket
+     * is already in use.
+     */
+    for (size_t i = 0; i < hashmap->num_buckets; i++) {
+        hashmap->buckets[i] = NULL;
+    }
 }
