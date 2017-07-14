@@ -13,22 +13,28 @@ static Pair **hashmap_get_pair(Hashmap *hashmap, Pair **prev_pair,
 Hashmap *hashmap_new(size_t num_buckets,
                      HashFunction hash, ComparisonFunction compare) {
     Hashmap *hashmap = malloc(sizeof(Hashmap));
-    if (hashmap != NULL) {
-        /* Initializing the buckets to NULL makes it easy to check if a bucket
-         * is already in use.
-         */
-        hashmap->buckets = calloc(num_buckets, sizeof(Pair *));
-        if (hashmap->buckets == NULL) {
-            free(hashmap);
-            return NULL;
-        }
-
-        hashmap->num_buckets = num_buckets;
-        hashmap->hash = hash;
-        hashmap->compare = compare;
+    if (hashmap == NULL) {
+        goto error_hashmap_alloc;
     }
 
+    /* Initializing the buckets to NULL makes it easy to check if a bucket
+     * is already in use.
+     */
+    hashmap->buckets = calloc(num_buckets, sizeof(Pair *));
+    if (hashmap->buckets == NULL) {
+        goto error_buckets_alloc;
+    }
+
+    hashmap->num_buckets = num_buckets;
+    hashmap->hash = hash;
+    hashmap->compare = compare;
+
     return hashmap;
+
+error_buckets_alloc:
+    free(hashmap);
+error_hashmap_alloc:
+    return NULL;
 }
 
 void hashmap_free(Hashmap *hashmap) {
