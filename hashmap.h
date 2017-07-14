@@ -42,7 +42,9 @@ Pair *hashmap_set(Hashmap *hashmap, const void *key, void *value);
  */
 Pair *hashmap_get(Hashmap *hashmap, const void *key);
 
-/* Delete a mapping for a given key. */
-void hashmap_delete(Hashmap *hashmap, const void *key);
+/* Delete a mapping for a given key.
+ * Returns the value of the deleted mapping or NULL if it doesn't exist.
+ */
+void *hashmap_delete(Hashmap *hashmap, const void *key);
 
 #endif

@@ -70,10 +70,12 @@ Pair *hashmap_get(Hashmap *hashmap, const void *key) {
     return *get_pair(hashmap, NULL, key);
 }
 
-void hashmap_delete(Hashmap *hashmap, const void *key) {
+void *hashmap_delete(Hashmap *hashmap, const void *key) {
+    void *value = NULL;
     Pair *prev_pair = NULL;
     Pair **pair = get_pair(hashmap, &prev_pair, key);
     if (*pair != NULL) {
+        value = (*pair)->value;
         Pair *next_pair = (*pair)->next;
         free(*pair);
         if (prev_pair != NULL) {
@@ -85,6 +87,8 @@ void hashmap_delete(Hashmap *hashmap, const void *key) {
             *pair = next_pair;
         }
     }
+
+    return value;
 }
 
 static Pair *pair_new(const void *key, void *value) {
