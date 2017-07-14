@@ -8,6 +8,7 @@ static Pair *pair_new(const void *key, void *value);
 static Pair **get_bucket(Hashmap *hashmap, const void *key);
 static Pair **get_pair_ptr(Hashmap *hashmap, const void *key);
 static void init_buckets(Hashmap *hashmap);
+static void free_buckets(Hashmap *hashmap);
 
 
 Hashmap *hashmap_new(size_t num_buckets,
@@ -37,16 +38,7 @@ error_hashmap_alloc:
 }
 
 void hashmap_free(Hashmap *hashmap) {
-    for (size_t i = 0; i < hashmap->num_buckets; i++) {
-        Pair *pair = hashmap->buckets[i];
-        Pair *prev_pair = NULL;
-        while (pair != NULL) {
-            prev_pair = pair;
-            pair = pair->next;
-            free(prev_pair);
-        }
-    }
-
+    free_buckets(hashmap);
     free(hashmap->buckets);
     free(hashmap);
 }
@@ -114,5 +106,17 @@ static void init_buckets(Hashmap *hashmap) {
      */
     for (size_t i = 0; i < hashmap->num_buckets; i++) {
         hashmap->buckets[i] = NULL;
+    }
+}
+
+static void free_buckets(Hashmap *hashmap) {
+    for (size_t i = 0; i < hashmap->num_buckets; i++) {
+        Pair *pair = hashmap->buckets[i];
+        Pair *prev_pair = NULL;
+        while (pair != NULL) {
+            prev_pair = pair;
+            pair = pair->next;
+            free(prev_pair);
+        }
     }
 }
