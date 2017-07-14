@@ -5,9 +5,8 @@
 
 
 static Pair *pair_new(const void *key, void *value);
-static Pair **hashmap_get_bucket(Hashmap *hashmap, const void *key);
-static Pair **hashmap_get_pair(Hashmap *hashmap, Pair **prev_pair,
-                               const void *key);
+static Pair **get_bucket(Hashmap *hashmap, const void *key);
+static Pair **get_pair(Hashmap *hashmap, Pair **prev_pair, const void *key);
 
 
 Hashmap *hashmap_new(size_t num_buckets,
@@ -54,7 +53,7 @@ void hashmap_free(Hashmap *hashmap) {
 
 Pair *hashmap_set(Hashmap *hashmap, const void *key, void *value) {
     Pair *prev_pair = NULL;
-    Pair **pair = hashmap_get_pair(hashmap, &prev_pair, key);
+    Pair **pair = get_pair(hashmap, &prev_pair, key);
     if (*pair == NULL) {
         *pair = pair_new(key, value);
         if (prev_pair != NULL) {
@@ -68,12 +67,12 @@ Pair *hashmap_set(Hashmap *hashmap, const void *key, void *value) {
 }
 
 Pair *hashmap_get(Hashmap *hashmap, const void *key) {
-    return *hashmap_get_pair(hashmap, NULL, key);
+    return *get_pair(hashmap, NULL, key);
 }
 
 void hashmap_delete(Hashmap *hashmap, const void *key) {
     Pair *prev_pair = NULL;
-    Pair **pair = hashmap_get_pair(hashmap, &prev_pair, key);
+    Pair **pair = get_pair(hashmap, &prev_pair, key);
     if (*pair != NULL) {
         Pair *next_pair = (*pair)->next;
         free(*pair);
@@ -88,25 +87,6 @@ void hashmap_delete(Hashmap *hashmap, const void *key) {
     }
 }
 
-static Pair **hashmap_get_bucket(Hashmap *hashmap, const void *key) {
-    return hashmap->buckets + hashmap->hash(key) % hashmap->num_buckets;
-}
-
-static Pair **hashmap_get_pair(Hashmap *hashmap, Pair **prev_pair,
-                               const void *key) {
-    Pair **pair = hashmap_get_bucket(hashmap, key);
-    while (*pair != NULL) {
-        if (hashmap->compare((*pair)->key, key)) {
-            break;
-        } else if (prev_pair != NULL) {
-            *prev_pair = *pair;
-        }
-        pair = &(*pair)->next;
-    }
-
-    return pair;
-}
-
 static Pair *pair_new(const void *key, void *value) {
     /* Since key is const, it'll have to be copied over from a struct that's
      * already initialized.
@@ -115,6 +95,24 @@ static Pair *pair_new(const void *key, void *value) {
     Pair *pair = malloc(sizeof(Pair));
     if (pair != NULL) {
         memcpy(pair, &init, sizeof(Pair));
+    }
+
+    return pair;
+}
+
+static Pair **get_bucket(Hashmap *hashmap, const void *key) {
+    return hashmap->buckets + hashmap->hash(key) % hashmap->num_buckets;
+}
+
+static Pair **get_pair(Hashmap *hashmap, Pair **prev_pair, const void *key) {
+    Pair **pair = get_bucket(hashmap, key);
+    while (*pair != NULL) {
+        if (hashmap->compare((*pair)->key, key)) {
+            break;
+        } else if (prev_pair != NULL) {
+            *prev_pair = *pair;
+        }
+        pair = &(*pair)->next;
     }
 
     return pair;
