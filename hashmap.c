@@ -6,7 +6,7 @@
 
 static Pair *pair_new(const void *key, void *value);
 static Pair **get_bucket(Hashmap *hashmap, const void *key);
-static Pair **get_pair(Hashmap *hashmap, Pair **prev_pair, const void *key);
+static Pair **get_pair_ptr(Hashmap *hashmap, const void *key);
 static void init_buckets(Hashmap *hashmap);
 
 
@@ -52,40 +52,28 @@ void hashmap_free(Hashmap *hashmap) {
 }
 
 Pair *hashmap_set(Hashmap *hashmap, const void *key, void *value) {
-    Pair *prev_pair = NULL;
-    Pair **pair = get_pair(hashmap, &prev_pair, key);
-    if (*pair == NULL) {
-        *pair = pair_new(key, value);
-        if (prev_pair != NULL) {
-            prev_pair->next = *pair;
-        }
+    Pair **pair_ptr = get_pair_ptr(hashmap, key);
+    if (*pair_ptr == NULL) {
+        *pair_ptr = pair_new(key, value);
     } else {
-        (*pair)->value = value;
+        (*pair_ptr)->value = value;
     }
 
-    return *pair;
+    return *pair_ptr;
 }
 
 Pair *hashmap_get(Hashmap *hashmap, const void *key) {
-    return *get_pair(hashmap, NULL, key);
+    return *get_pair_ptr(hashmap, key);
 }
 
 void *hashmap_delete(Hashmap *hashmap, const void *key) {
     void *value = NULL;
-    Pair *prev_pair = NULL;
-    Pair **pair = get_pair(hashmap, &prev_pair, key);
-    if (*pair != NULL) {
-        value = (*pair)->value;
-        Pair *next_pair = (*pair)->next;
-        free(*pair);
-        if (prev_pair != NULL) {
-            prev_pair->next = next_pair;
-        } else {
-             /* This was the first pair in this particular bucket, so the
-              * pointer needs to be updated to the next pair (may be NULL).
-             */
-            *pair = next_pair;
-        }
+    Pair **pair_ptr = get_pair_ptr(hashmap, key);
+    if (*pair_ptr != NULL) {
+        value = (*pair_ptr)->value;
+        Pair *next_pair = (*pair_ptr)->next;
+        free(*pair_ptr);
+        *pair_ptr = next_pair;
     }
 
     return value;
@@ -108,18 +96,16 @@ static Pair **get_bucket(Hashmap *hashmap, const void *key) {
     return hashmap->buckets + hashmap->hash(key) % hashmap->num_buckets;
 }
 
-static Pair **get_pair(Hashmap *hashmap, Pair **prev_pair, const void *key) {
-    Pair **pair = get_bucket(hashmap, key);
-    while (*pair != NULL) {
-        if (hashmap->compare((*pair)->key, key)) {
+static Pair **get_pair_ptr(Hashmap *hashmap, const void *key) {
+    Pair **pair_ptr = get_bucket(hashmap, key);
+    while (*pair_ptr != NULL) {
+        if (hashmap->compare((*pair_ptr)->key, key)) {
             break;
-        } else if (prev_pair != NULL) {
-            *prev_pair = *pair;
         }
-        pair = &(*pair)->next;
+        pair_ptr = &(*pair_ptr)->next;
     }
 
-    return pair;
+    return pair_ptr;
 }
 
 static void init_buckets(Hashmap *hashmap) {
