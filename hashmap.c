@@ -19,7 +19,10 @@ static Pair *pair_new(const void *key, void *value);
 static Pair **get_bucket(Hashmap *hashmap, const void *key);
 static Pair **get_pair_ptr(Hashmap *hashmap, const void *key);
 static void init_buckets(Hashmap *hashmap);
-static void free_buckets(Hashmap *hashmap);
+static void free_buckets(Hashmap *hashmap, FreeKeyFunction free_key,
+                         FreeValueFunction free_value);
+static void free_pair(Pair *pair, FreeKeyFunction free_key,
+                      FreeValueFunction free_value);
 
 Hashmap *hashmap_new(size_t num_buckets,
                      HashFunction hash, ComparisonFunction compare) {
@@ -47,8 +50,9 @@ error_hashmap_alloc:
     return NULL;
 }
 
-void hashmap_free(Hashmap *hashmap) {
-    free_buckets(hashmap);
+void hashmap_free(Hashmap *hashmap,
+                  FreeKeyFunction free_key, FreeValueFunction free_value) {
+    free_buckets(hashmap, free_key, free_value);
     free(hashmap->buckets);
     free(hashmap);
 }
@@ -125,14 +129,27 @@ static void init_buckets(Hashmap *hashmap) {
     }
 }
 
-static void free_buckets(Hashmap *hashmap) {
+static void free_buckets(Hashmap *hashmap, FreeKeyFunction free_key,
+                         FreeValueFunction free_value) {
     for (size_t i = 0; i < hashmap->num_buckets; i++) {
         Pair *pair = hashmap->buckets[i];
         Pair *prev_pair = NULL;
         while (pair != NULL) {
+            free_pair(pair, free_key, free_value);
             prev_pair = pair;
             pair = pair->next;
             free(prev_pair);
         }
+    }
+}
+
+static void free_pair(Pair *pair, FreeKeyFunction free_key,
+                      FreeValueFunction free_value) {
+    if (free_key != NULL) {
+        free_key((void *) pair->key);
+    }
+
+    if (free_value != NULL) {
+        free_value(pair->value);
     }
 }

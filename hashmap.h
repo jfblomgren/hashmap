@@ -6,6 +6,8 @@
 
 typedef size_t (*HashFunction)(const void *key);
 typedef bool (*ComparisonFunction)(const void *key1, const void *key2);
+typedef void (*FreeKeyFunction)(void *key);
+typedef void (*FreeValueFunction)(void *value);
 typedef struct Hashmap Hashmap;
 
 /* Create a new hashmap.
@@ -17,7 +19,8 @@ Hashmap *hashmap_new(size_t num_buckets,
 /* Free the memory used by the hashmap.
  * NOTE: This does NOT free the memory used by the keys and values.
  */
-void hashmap_free(Hashmap *hashmap);
+void hashmap_free(Hashmap *hashmap,
+                  FreeKeyFunction free_key, FreeValueFunction free_value);
 
 /* Set the mapping for a given key.
  * Returns non-zero if memory allocation fails.
