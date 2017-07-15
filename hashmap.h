@@ -37,10 +37,10 @@ void hashmap_free(Hashmap *hashmap);
  */
 Pair *hashmap_set(Hashmap *hashmap, const void *key, void *value);
 
-/* Get the mapping for a given key.
- * Returns NULL if no mapping exists for the key.
+/* Get the value for a given key.
+ * Returns the value or NULL if no mapping exists for the key.
  */
-Pair *hashmap_get(Hashmap *hashmap, const void *key);
+void *hashmap_get(Hashmap *hashmap, const void *key);
 
 /* Delete a mapping for a given key.
  * Returns the value of the deleted mapping or NULL if it doesn't exist.

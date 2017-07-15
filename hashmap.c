@@ -54,8 +54,9 @@ Pair *hashmap_set(Hashmap *hashmap, const void *key, void *value) {
     return *pair_ptr;
 }
 
-Pair *hashmap_get(Hashmap *hashmap, const void *key) {
-    return *get_pair_ptr(hashmap, key);
+void *hashmap_get(Hashmap *hashmap, const void *key) {
+    Pair *pair = *get_pair_ptr(hashmap, key);
+    return pair != NULL ? pair->value : NULL;
 }
 
 void *hashmap_delete(Hashmap *hashmap, const void *key) {
