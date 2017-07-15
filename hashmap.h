@@ -16,7 +16,7 @@ Hashmap *hashmap_new(size_t num_buckets,
                      HashFunction hash, ComparisonFunction compare);
 
 /* Free the memory used by the hashmap.
- * NOTE: This does NOT free the memory used by the keys and values.
+ * If free_pair is not NULL, it will be called for each pair in the hashmap.
  */
 void hashmap_free(Hashmap *hashmap, FreePairFunction free_pair);
 
