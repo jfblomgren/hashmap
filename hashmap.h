@@ -32,10 +32,11 @@ Hashmap *hashmap_new(size_t num_buckets,
 void hashmap_free(Hashmap *hashmap);
 
 /* Set the mapping for a given key.
- * Overwrites the current mapping if it already exists and returns NULL if
- * memory allocation fails.
+ * Returns non-zero if memory allocation fails.
+ * If old_value is not NULL, the old value of the mapping will be stored there.
  */
-Pair *hashmap_set(Hashmap *hashmap, const void *key, void *value);
+int hashmap_set(Hashmap *hashmap, const void *key,
+                void *value, void **old_value);
 
 /* Get the value for a given key.
  * Returns the value or NULL if no mapping exists for the key.

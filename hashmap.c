@@ -43,15 +43,20 @@ void hashmap_free(Hashmap *hashmap) {
     free(hashmap);
 }
 
-Pair *hashmap_set(Hashmap *hashmap, const void *key, void *value) {
+int hashmap_set(Hashmap *hashmap, const void *key,
+                void *value, void **old_value) {
     Pair **pair_ptr = get_pair_ptr(hashmap, key);
+    if (old_value != NULL) {
+        *old_value = *pair_ptr == NULL ? NULL : (*pair_ptr)->value;
+    }
+
     if (*pair_ptr == NULL) {
         *pair_ptr = pair_new(key, value);
     } else {
         (*pair_ptr)->value = value;
     }
 
-    return *pair_ptr;
+    return *pair_ptr != NULL;
 }
 
 void *hashmap_get(Hashmap *hashmap, const void *key) {
