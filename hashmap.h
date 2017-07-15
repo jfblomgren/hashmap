@@ -4,23 +4,9 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-
 typedef size_t (*HashFunction)(const void *key);
 typedef bool (*ComparisonFunction)(const void *key1, const void *key2);
-
-typedef struct Pair {
-    const void *key;
-    void *value;
-    struct Pair *next;
-} Pair;
-
-typedef struct {
-    size_t num_buckets;
-    Pair **buckets;
-    HashFunction hash;
-    ComparisonFunction compare;
-} Hashmap;
-
+typedef struct Hashmap Hashmap;
 
 /* Create a new hashmap.
  * Returns NULL if memory allocation fails.

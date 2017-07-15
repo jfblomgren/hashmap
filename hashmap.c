@@ -2,13 +2,24 @@
 #include <string.h>
 #include "hashmap.h"
 
+typedef struct Pair {
+    const void *key;
+    void *value;
+    struct Pair *next;
+} Pair;
+
+struct Hashmap {
+    size_t num_buckets;
+    Pair **buckets;
+    HashFunction hash;
+    ComparisonFunction compare;
+};
 
 static Pair *pair_new(const void *key, void *value);
 static Pair **get_bucket(Hashmap *hashmap, const void *key);
 static Pair **get_pair_ptr(Hashmap *hashmap, const void *key);
 static void init_buckets(Hashmap *hashmap);
 static void free_buckets(Hashmap *hashmap);
-
 
 Hashmap *hashmap_new(size_t num_buckets,
                      HashFunction hash, ComparisonFunction compare) {
