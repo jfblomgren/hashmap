@@ -14,7 +14,9 @@ typedef struct Hashmap Hashmap;
 Hashmap *hashmap_new(size_t num_buckets,
                      HashFunction hash, ComparisonFunction compare);
 
-/* Free all memory used by the hashmap. */
+/* Free the memory used by the hashmap.
+ * NOTE: This does NOT free the memory used by the keys and values.
+ */
 void hashmap_free(Hashmap *hashmap);
 
 /* Set the mapping for a given key.
