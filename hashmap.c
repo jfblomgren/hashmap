@@ -11,18 +11,21 @@ typedef struct Pair {
 struct Hashmap {
     size_t num_buckets;
     Pair **buckets;
+
     HashFunction hash;
     ComparisonFunction compare;
+    FreePairFunction free_pair;
 };
 
 static Pair *pair_new(const void *key, void *value);
 static Pair **get_bucket(Hashmap *hashmap, const void *key);
 static Pair **get_pair_ptr(Hashmap *hashmap, const void *key);
 static void init_buckets(Hashmap *hashmap);
-static void free_buckets(Hashmap *hashmap, FreePairFunction free_pair);
+static void free_buckets(Hashmap *hashmap);
+static void free_pair(Hashmap *hashmap, Pair *pair);
 
-Hashmap *hashmap_new(size_t num_buckets,
-                     HashFunction hash, ComparisonFunction compare) {
+Hashmap *hashmap_new(size_t num_buckets, HashFunction hash,
+                     ComparisonFunction compare, FreePairFunction free_pair) {
     Hashmap *hashmap = malloc(sizeof(Hashmap));
     if (hashmap == NULL) {
         goto error_hashmap_alloc;
@@ -36,6 +39,7 @@ Hashmap *hashmap_new(size_t num_buckets,
     hashmap->num_buckets = num_buckets;
     hashmap->hash = hash;
     hashmap->compare = compare;
+    hashmap->free_pair = free_pair;
 
     init_buckets(hashmap);
 
@@ -47,8 +51,8 @@ error_hashmap_alloc:
     return NULL;
 }
 
-void hashmap_free(Hashmap *hashmap, FreePairFunction free_pair) {
-    free_buckets(hashmap, free_pair);
+void hashmap_free(Hashmap *hashmap) {
+    free_buckets(hashmap);
     free(hashmap->buckets);
     free(hashmap);
 }
@@ -74,17 +78,13 @@ void *hashmap_get(Hashmap *hashmap, const void *key) {
     return pair != NULL ? pair->value : NULL;
 }
 
-void *hashmap_delete(Hashmap *hashmap, const void *key) {
-    void *value = NULL;
+void hashmap_delete(Hashmap *hashmap, const void *key) {
     Pair **pair_ptr = get_pair_ptr(hashmap, key);
     if (*pair_ptr != NULL) {
-        value = (*pair_ptr)->value;
         Pair *next_pair = (*pair_ptr)->next;
-        free(*pair_ptr);
+        free_pair(hashmap, *pair_ptr);
         *pair_ptr = next_pair;
     }
-
-    return value;
 }
 
 static Pair *pair_new(const void *key, void *value) {
@@ -125,17 +125,22 @@ static void init_buckets(Hashmap *hashmap) {
     }
 }
 
-static void free_buckets(Hashmap *hashmap, FreePairFunction free_pair) {
+static void free_buckets(Hashmap *hashmap) {
     for (size_t i = 0; i < hashmap->num_buckets; i++) {
         Pair *pair = hashmap->buckets[i];
         Pair *prev_pair = NULL;
         while (pair != NULL) {
-            if (free_pair != NULL) {
-                free_pair((void *) pair->key, pair->value);
-            }
             prev_pair = pair;
             pair = pair->next;
-            free(prev_pair);
+            free_pair(hashmap, prev_pair);
         }
     }
+}
+
+static void free_pair(Hashmap *hashmap, Pair *pair) {
+    if (hashmap->free_pair != NULL) {
+        hashmap->free_pair((void *) pair->key, pair->value);
+    }
+
+    free(pair);
 }

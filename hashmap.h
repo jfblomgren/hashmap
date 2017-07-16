@@ -10,15 +10,15 @@ typedef void (*FreePairFunction)(void *key, void *value);
 typedef struct Hashmap Hashmap;
 
 /* Create a new hashmap.
+ * If free_pair is NULL, memory occupied by keys and values will not be freed.
  * Returns NULL if memory allocation fails.
  */
-Hashmap *hashmap_new(size_t num_buckets,
-                     HashFunction hash, ComparisonFunction compare);
+Hashmap *hashmap_new(size_t num_buckets, HashFunction hash,
+                     ComparisonFunction compare, FreePairFunction free_pair);
 
 /* Free the memory used by the hashmap.
- * If free_pair is not NULL, it will be called for each pair in the hashmap.
  */
-void hashmap_free(Hashmap *hashmap, FreePairFunction free_pair);
+void hashmap_free(Hashmap *hashmap);
 
 /* Set the mapping for a given key.
  * Returns non-zero if memory allocation fails.
@@ -32,9 +32,7 @@ int hashmap_set(Hashmap *hashmap, const void *key,
  */
 void *hashmap_get(Hashmap *hashmap, const void *key);
 
-/* Delete a mapping for a given key.
- * Returns the value of the deleted mapping or NULL if it doesn't exist.
- */
-void *hashmap_delete(Hashmap *hashmap, const void *key);
+/* Delete a mapping for a given key. */
+void hashmap_delete(Hashmap *hashmap, const void *key);
 
 #endif
